@@ -49,7 +49,7 @@ class character:
         box=[int(i) for i in self.bounding_box[:2]]
 
         #bits = np.unpackbits(np.fromiter((int(i, 16) for i in self.data), dtype=np.uint8))
-        if trace:
+        if 'trace' in globals() and trace:
             pdb.set_trace()
         bits = np.array([ np.unpackbits(np.uint8([ int( dd[d<<1:(d<<1)+2] , base=16 ) for d in range(len(dd)>>1)] )) for dd in self.data])
 
@@ -70,7 +70,7 @@ class character:
         del self.data # no longer needed as it is in d
 
     def __getitem__(self,pos):
-        if trace:
+        if 'trace' in globals() and trace:
             pdb.set_trace()
         try:
             return self.d.__getitem__(pos)
@@ -163,7 +163,7 @@ class font:
 #            print(repr(c))
     def fontstring(self, s):
         #return [self.chars[ord(ch)] for ch in s]
-        thestring=[self.chars[ord(c)] for c in s]
+        thestring=[self.chars.get(ord(c), self.chars[32]) for c in s]
         cmap=[32, 9624, 9629, 9600, 9622, 9612, 9630, 9627, 9623, 9626, 9616, 9628, 9604, 9625, 9631, 9608]
         def fn(x, y):
             x1, y1=x*2, y*2
@@ -190,7 +190,7 @@ def msg(fnt, inpstr):
         if rem:
             theight+=1
     
-        if trace:
+        if 'trace' in globals() and trace:
             pdb.set_trace()
         for y in range(theight):
             l=[]
@@ -198,6 +198,27 @@ def msg(fnt, inpstr):
                 l.append(chr(fs(x, y)))
             ll.append(str().join(l))
         return '\n'.join(ll)
+def get_glyph_matrix(fnt, inpstr):
+    """
+    Returns a structured matrix representation of the input string
+    using the BDF font glyphs.
+
+    :param fnt: The loaded font object.
+    :param inpstr: The string to render.
+    :return: A 2D list of characters representing the rendered glyphs.
+    """
+    char_width, char_height = fnt.default_bounding_box[:2]
+    total_width = char_width * len(inpstr)
+    total_height = char_height
+
+    # Directly construct the 2D matrix using nested list comprehensions
+    return [
+        [
+            '█' if (glyph := fnt.chars.get(ord(inpstr[x // char_width]))) and glyph.px(y, x % char_width) else ' '
+            for x in range(total_width)
+        ]
+        for y in range(total_height)
+    ]
 
 def main(fn, hello=["Hello"]):
     f={}

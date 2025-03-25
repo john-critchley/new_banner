@@ -167,7 +167,7 @@ class font:
 #            print('---')
 #            print(repr(c))
     def fontstring(self, s):
-        return [self.chars[ord(ch)] for ch in s]
+        return [self.chars.get(ord(ch), self.chars[32]) for ch in s]
         
 def msg(fnt, inpstr):
         fs=(fnt.fontstring(inpstr))
